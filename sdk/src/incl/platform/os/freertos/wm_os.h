@@ -105,7 +105,7 @@ static inline uint32_t os_get_usec_counter()
  *
  * @return Time in micro-secs since bootup
  */
-uint32_t os_get_timestamp(void);
+unsigned int os_get_timestamp(void);
 
 
 /*** Thread Management ***/
