@@ -1,26 +1,45 @@
-# Copyright (C) 2008-2015, Marvell International Ltd.
+# Copyright (C) 2008-2016, Marvell International Ltd.
 # All Rights Reserved.
+#
+# Description:
+# ------------
+# This file, wmsdk_rules.mk contains call to following rules/functions:
+#
+# 	mfg binary creation		(create_mfg_bin)
+# 	upg binary preprocessing	(check_creation_upg_bin)
+# 	upg binary creation		(create_upg_bin)
 
 # Pull in the standard set of rules
 include build/rules.mk
+include build/extended_rules.mk
+-include build/extended_secure_rules.mk
 
-# Add our own (aws_starter_sdk-specific) rules on top
+# Add our own (WMSDK-specific) rules on top
 
-##################### Program (.bin) creation
-define create_aws_sdk_prog
-  $(1).app: $($(1)-output-dir-y)/$(1).bin
+#---------------MFG Creation-------------------#
 
-  $($(1)-output-dir-y)/$(1).bin: $($(1)-output-dir-y)/$(1).axf $$(t_axf2fw)
-	$$(AT)$$(t_axf2fw) $$< $$@
-	@echo " [bin] $$(abspath $$@)"
+$(foreach e,$(b-exec-y), $(eval $(if $($(e)-mfg-cfg-y),$(call create_mfg_bin,$(e),$($(e)-dir-y)/$($(e)-mfg-cfg-y),mfg-$(e)))))
 
-  $(1).app.clean: $(1).app.clean_bin
+$(foreach e,$(b-exec-y), $(eval $(if $($(e)-mfg-cfg-y),$(call clean_mfg_bin_rule,$(e)))))
 
-  .PHONY: $(1).app.clean_bin
-  $(1).app.clean_bin:
-	$$(AT)rm -f  $($(1)-output-dir-y)/$(1).bin
+
+#---------------End of MFG creation-------------#
+
+#--------------Upgrade image creation-----------#
+
+define check_creation_upg_bin
+ifneq ($($(1)-upg-img-y),)
+ifeq ($($(1)-upg-cfg-y),)
+$(1)-upg-cfg-y := fw_generator.config
+endif
+
+ifeq ($($(1)-upg-crypto-y),)
+$(1)-upg-crypto-y := chacha20_ed25519
+endif
+endif
 endef
 
-$(foreach p,$(b-exec-y), $(eval $(call create_aws_sdk_prog,$(p))))
-#####################
+$(foreach e,$(b-exec-y), $(eval $(call check_creation_upg_bin,$(e))))
+$(foreach e,$(b-exec-y), $(eval $(call create_upg_bin,$(e),$($(e)-upg-img-y),$($(e)-dir-y)/$($(e)-upg-cfg-y),$($(e)-upg-crypto-y))))
 
+#-----------------End of Upgrade Image Creation---------#

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2008-2015, Marvell International Ltd.
+ *  Copyright (C) 2008-2016, Marvell International Ltd.
  *  All Rights Reserved.
  */
 /*
@@ -268,13 +268,13 @@ int aws_publish_property_state(ShadowParameters_t *sp)
 
 	memset(state, 0, BUFSIZE);
 	if (pushbutton_a_count_prev != pushbutton_a_count) {
-		snprintf(buf_out, BUFSIZE, ",\"%s\":%d", VAR_BUTTON_A_PROPERTY,
+		snprintf(buf_out, BUFSIZE, ",\"%s\":%lu", VAR_BUTTON_A_PROPERTY,
 			 pushbutton_a_count);
 		strcat(state, buf_out);
 		pushbutton_a_count_prev = pushbutton_a_count;
 	}
 	if (pushbutton_b_count_prev != pushbutton_b_count) {
-		snprintf(buf_out, BUFSIZE, ",\"%s\":%d", VAR_BUTTON_B_PROPERTY,
+		snprintf(buf_out, BUFSIZE, ",\"%s\":%lu", VAR_BUTTON_B_PROPERTY,
 			 pushbutton_b_count);
 		strcat(state, buf_out);
 		pushbutton_b_count_prev = pushbutton_b_count;
@@ -284,7 +284,7 @@ int aws_publish_property_state(ShadowParameters_t *sp)
 	 * publish updated state on configured topic.
 	 */
 	if (led_1_state_prev != led_1_state) {
-		snprintf(buf_out, BUFSIZE, ",\"%s\":%d", VAR_LED_1_PROPERTY,
+		snprintf(buf_out, BUFSIZE, ",\"%s\":%lu", VAR_LED_1_PROPERTY,
 			 led_1_state);
 		strcat(state, buf_out);
 		led_1_state_prev = led_1_state;
