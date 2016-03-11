@@ -1,16 +1,28 @@
-# Copyright (C) 2008-2015, Marvell International Ltd.
+# Copyright (C) 2008-2016, Marvell International Ltd.
 # All Rights Reserved.
 
 os_dir := Windows
-ifneq ($(findstring :, $(APP)),)
-CYG := /cygdrive
-APP_PATH := $(realpath $(CYG)/$(shell echo "$(APP)" | sed -e 's/\://g'))
+file_ext := .exe
+
+ifneq ($(MAKE_VERSION),4.1)
+  $(error "Please use make version 4.1")
 endif
 
-# $(CURDIR) should be SDK directory path
-CC    := $(CURDIR)/build/toolchains/convertcc.sh
-LD    := $(CURDIR)/build/toolchains/convertld.sh
-AR    := $(CURDIR)/build/toolchains/convertar.sh
+######################################
+# Cygwin python check
+cygwin_python_used := $(shell which python | tail -1)
+
+define cygwin_python_error
+
+*** It seems that you are using Cygwin Python. Please install Python separately for Windows.
+*** For more details please refer to developement host setup.
+
+endef
+
+ifeq ($(cygwin_python_used),/usr/bin/python)
+  $(error $(cygwin_python_error))
+endif
+######################################
 
 $(t_mconf): mconf_not_on_cygwin
 mconf_not_on_cygwin:
@@ -19,3 +31,18 @@ mconf_not_on_cygwin:
 	@echo "Please use 'make config' instead"
 	@echo ""
 	@false
+
+# This is used to replace ":" in drive letter
+# This will be handy in resolving issues in rules/targets
+escape_dir_name := _wmdrive
+
+# Alphabet to be escaped
+escape_let := :
+
+# List of  Drive letters
+drive-list-y := C D E F
+
+# Function to resolve input path
+define b-abspath
+$(shell cygpath -m $(1))
+endef

@@ -1,4 +1,4 @@
-# Copyright (C) 2008-2015, Marvell International Ltd.
+# Copyright (C) 2008-2016, Marvell International Ltd.
 # All Rights Reserved.
 
 # -*-makefile-*-
@@ -7,12 +7,12 @@
 -include .config
 include build/aws_starter_sdk.mk
 
-subdir-y += wmsdk/external/aws_iot
-subdir-y += wmsdk/external/freertos
-subdir-y += wmsdk/external/lwip
+subdir-y += sdk/external/aws_iot
+subdir-y += sdk/external/freertos
+subdir-y += sdk/external/lwip
 
 # pre-built libraries
-subdir-y += wmsdk/libs
+subdir-y += sdk/libs
 
 ifeq ($(APP),)
 -include sample_apps/sample_apps.mk
@@ -30,5 +30,6 @@ post-build-1: do_the_build
 do_the_build: pre-build-1
 	$(AT)$(MAKE) build
 
-build: $(b-exec-paths-y)
+build: $(b-exec-apps-y)
+	@echo $(b-exec-paths-y)
 .PHONY: all build do_the_build post-build-1 pre-build-1
