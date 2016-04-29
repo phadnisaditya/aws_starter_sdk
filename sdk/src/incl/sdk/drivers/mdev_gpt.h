@@ -1,4 +1,4 @@
-/* Copyright 2008-2016, Marvell International Ltd.
+/* Copyright 2008-2015, Marvell International Ltd.
  *  All Rights Reserved.
 */
 /*! \file mdev_gpt.h

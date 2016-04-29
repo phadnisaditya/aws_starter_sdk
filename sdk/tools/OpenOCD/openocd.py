@@ -6,15 +6,14 @@
 # Note: sys.stdout.flush() and sys.stderr.flush() are required for proper
 # console output in eclipse
 
-import os, sys, platform, subprocess
+import os, sys, platform, getopt, subprocess
 from sys import platform as _platform
 
-IFC_FILE = "ftdi.cfg"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # We define which as it may not be available on Windows
 def which(program):
-    if _platform == "win32" or _platform == "win64":
+    if _platform == "win32" or _platform == "win64" or _platform == "cygwin":
         program = program + '.exe'
 
     def is_exe(fpath):
@@ -32,27 +31,69 @@ def which(program):
                 return exe_file
     return ""
 
-if _platform == "linux" or _platform == "linux2":
-    if (platform.machine() == "i686"):
-        OPENOCD_PATH = which(SCRIPT_DIR + "/Linux/openocd")
-    else:
-        OPENOCD_PATH = which(SCRIPT_DIR + "/Linux/openocd64")
-elif _platform == "darwin":
-    OPENOCD_PATH = which("openocd")
-elif _platform == "win32" or _platform == "win64":
-    OPENOCD_PATH = which(SCRIPT_DIR + "/Windows/openocd")
+def get_openocd():
+    global OPENOCD
+    if _platform == "linux" or _platform == "linux2":
+        if (platform.machine() == "i686"):
+            OPENOCD = which(SCRIPT_DIR + "/Linux/openocd")
+        else:
+            OPENOCD = which(SCRIPT_DIR + "/Linux/openocd64")
+    elif _platform == "darwin":
+        OPENOCD = which("openocd")
+    elif _platform == "win32" or _platform == "win64" or _platform == "cygwin":
+        OPENOCD = which(SCRIPT_DIR + "/Windows/openocd")
+    if not len(OPENOCD):
+        print "Error: Please install OpenOCD for your platform"
+        sys.exit()
 
-if not len(OPENOCD_PATH):
-    print "Error: Please install OpenOCD for your platform"
-    sys.exit()
+def file_path(file_name):
+    if _platform == "win32" or _platform == "win64":
+        return file_name.replace('\\', '/')
+    elif _platform == "cygwin":
+        return subprocess.Popen(['cygpath', '-m', file_name], stdout = subprocess.PIPE).communicate()[0].strip()
+    else:
+        return file_name
 
 def print_usage():
-	print ""
-	print "Usage: ./openocd.py"
-	sys.stdout.flush()
+    print ""
+    print "Usage:"
+    print sys.argv[0]
+    print "Optional Usage:"
+    print " [<-i | --interface> <JTAG hardware interface name>]"
+    print "          Supported ones are ftdi, jlink, amontec, malink. Default is ftdi."
+    print " [-h | --help]"
+    print "          Display usage"
+    sys.stdout.flush()
 
-print "Using OpenOCD interface file", IFC_FILE
-sys.stdout.flush()
+def main():
+    global SCRIPT_DIR
+    SCRIPT_DIR = file_path(SCRIPT_DIR)
+    IFC_FILE = (os.getenv("DEBUG_INTERFACE", "ftdi") or "ftdi") + '.cfg'
+    get_openocd()
+    try:
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "i:h", ["interface=","help"])
+        if len(args):
+            print_usage()
+            sys.exit()
+    except getopt.GetoptError as e:
+        print e
+        print_usage()
+        sys.exit()
 
-subprocess.call ([OPENOCD_PATH, '-s', SCRIPT_DIR + '/interface', '-f', IFC_FILE, '-s', SCRIPT_DIR, '-f','openocd.cfg', '-c', 'gdb_port pipe; log_output openocd.log'])
-sys.stderr.flush()
+    for opt, arg in opts:
+        if opt in ("-i", "--interface"):
+            IFC_FILE = arg + '.cfg'
+        elif opt in ("-h", "--help"):
+            print_usage()
+            sys.exit()
+
+    print "Using OpenOCD interface file", IFC_FILE
+    sys.stdout.flush()
+    subprocess.call ([OPENOCD, '-s', SCRIPT_DIR + '/interface', '-f', IFC_FILE, '-s', SCRIPT_DIR, '-f','openocd.cfg', '-c', 'gdb_port pipe; log_output openocd.log'])
+    sys.stderr.flush()
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass

@@ -39,6 +39,20 @@ typedef uint16_t u_int16_t;
 typedef uint32_t u_int32_t;
 typedef uint64_t u_int64_t;
 
+/* Time related */
+typedef signed int sbintime_t;
+
+/* Required by cyassl build */
+typedef long off_t;
+typedef short dev_t;
+typedef unsigned short ino_t;
+typedef unsigned short nlink_t;
+typedef unsigned short uid_t;
+typedef unsigned short mode_t;
+typedef unsigned short gid_t;
+typedef signed char pid_t;
+typedef unsigned long useconds_t;
+
 /*
  * Some headers seem to require this...
  */
@@ -70,5 +84,14 @@ typedef struct fd_set {
 	unsigned char fd_bits[(FD_SETSIZE + 7) / 8];
 } fd_set;
 #endif /* FD_SET */
+
+#ifndef __ICCARM__
+/* wmsdk: Added from sys/times.h and machine/types.h */
+#define	_CLOCK_T_	unsigned long		/* clock() */
+#ifndef __clock_t_defined
+typedef _CLOCK_T_ clock_t;
+#define __clock_t_defined
+#endif
+#endif
 
 #endif /* _SYS_TYPES_H */

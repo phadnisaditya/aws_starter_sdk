@@ -10,7 +10,7 @@
  * A typical UART device usage scenario is as follows:
  *
  * -# Verify that board file API board_uart_pin_config() located at
- *  wmsdk/src/boards/{board_file}.c reflects the correct pinmux settings.
+ *  sdk/src/boards/{board_file}.c reflects the correct pinmux settings.
  *  If found missing, please add the appropriate pinmux configuration
  *  corresponding to the UART_ID.
  *  * -# Initialize the UART driver using uart_drv_init().
@@ -56,7 +56,7 @@
  */
 
 /*
- * Copyright 2008-2016, Marvell International Ltd.
+ * Copyright 2008-2015, Marvell International Ltd.
  * All Rights Reserved.
  */
 #ifndef _MDEV_UART_H_
@@ -87,6 +87,17 @@
 #define XON    0x11
 #define XOFF   0x13
 #define ESC    0x1b
+
+/** DEFAULT_DMA_BLK_SIZE is the default block size for DMA transfer.
+ * If UARTDRV_SIZE_RX_BUF = DEFAULT_DMA_BLK_SIZE,
+ * internal software buffer size is fixed to UARTDRV_SIZE_RX_BUF
+ * If UARTDRV_SIZE_RX_BUF > DEFAULT_DMA_BLK_SIZE,
+ * internal software buffer size is fixed to greatest possible multiple of
+ * DEFAULT_DMA_BLK_SIZE.
+ * It is not allowed to have UARTDRV_SIZE_RX_BUF smaller than
+ * DEFAULT_DMA_BLK_SIZE
+ */
+#define DEFAULT_DMA_BLK_SIZE 256
 
 /**
  * Enum to enable and disable DMA mode for uart transfer
@@ -151,11 +162,35 @@ void uart_drv_deinit(UART_ID_Type id);
  */
 int uart_drv_xfer_mode(UART_ID_Type port_id, UART_DMA_MODE dma_mode);
 
+/** Set timeout for UART operations
+ *
+ * This function sets the timeout for UART operations.
+ * It is disabled by default.
+ * @pre uart_drv_init()
+ *
+ * @param[in] port_id UART port number
+ * @param[in] tx_tout timeout value in milli seconds, or zero to
+ *            disable timeout(i.e.return immediately without
+ *            waiting for transfer completion)
+ * @param[in] rx_tout timeout value in milli seconds, or zero to
+ *            disable timeout.(i.e.return immediately without waiting
+ *            for transfer completion)
+ */
+void uart_drv_timeout(UART_ID_Type port_id, unsigned long tx_tout,
+		unsigned long rx_tout);
+
 /** Open handle to UART Device
  *
  * This function opens the handle to UART device and enables application to use
  * the device. This handle should be used in other calls related to UART device.
  *
+ * In case UART port enables DMA using \ref uart_drv_xfer_mode, this API
+ * configures and enables UART-DMA. If \ref uart_drv_dma_rd_blk_size() is
+ * configured, UART port receives the data in chunks of size DMA_BLK_SIZE and
+ * moves the data into the software FIFO. This data can be retrieved using the
+ * API \ref uart_drv_read().
+ *
+
  * \param[in] port_id Port ID of UART.
  * \param[in] baud Baud rate.
  * \return Handle to the UART device.
@@ -173,7 +208,7 @@ mdev_t *uart_drv_open(UART_ID_Type port_id, uint32_t baud);
  */
 int uart_drv_close(mdev_t *dev);
 
-/** Read data from UART
+/** Read data from UART (DMA or IO mode)
  *
  * This function is used to read data arriving serially over serial in line.
  *
@@ -186,7 +221,7 @@ int uart_drv_close(mdev_t *dev);
  */
 uint32_t uart_drv_read(mdev_t *dev, uint8_t *buf, uint32_t num);
 
-/** Write data to UART
+/** Write data to UART (DMA or IO mode)
  *
  * This function is used to write data to the UART in order to transmit them
  * serially over serial out line.
@@ -260,7 +295,7 @@ int uart_drv_dma_rd_blk_size(UART_ID_Type uart_id, uint32_t size);
  * to over-write default configuration.
  * Parameter flow_control is to enable and disable software flow control.
  * If enabled, when uart_rx_buffer is almost full, it sends XOFF to the
- * transimitter to pause the transmission and when enough free space is
+ * transmitter to pause the transmission and when enough free space is
  * available in uart_rx_buffer, it sends XON to transmitter to resume the
  * transmission. Default values of XON and XOFF are defined in mdev_uart.h,
  * which are standard values 0x11 and 0x13. In case of binary data, if data

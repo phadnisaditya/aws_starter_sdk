@@ -1,4 +1,16 @@
+# Copyright (C) 2016 Marvell International Ltd.
+# All Rights Reserved.
+
 # This file defines useful debug commands
+
+# Function to reset the board
+define reset
+monitor reset halt
+monitor chip_fixup
+end
+document reset
+Resets the board
+end
 
 # Function to restore hard fault context
 define hf_restore
@@ -10,4 +22,3 @@ end
 document hf_restore
 Restores cpu context to the instruction that caused the hard fault
 end
-

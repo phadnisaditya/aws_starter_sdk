@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2008-2016, Marvell International Ltd.
+ *  Copyright (C) 2008-2015, Marvell International Ltd.
  *  All Rights Reserved.
  */
 /*
@@ -60,11 +60,7 @@ static enum state device_state;
 /* Thread handle */
 static os_thread_t aws_starter_thread;
 /* Buffer to be used as stack */
-static os_thread_stack_define(aws_starter_stack, 8 * 1024);
-/* Thread handle */
-static os_thread_t aws_shadow_yield_thread;
-/* Buffer to be used as stack */
-static os_thread_stack_define(aws_shadow_yield_stack, 2 * 1024);
+static os_thread_stack_define(aws_starter_stack, 12 * 1024);
 /* aws iot url */
 static char url[128];
 
@@ -76,6 +72,7 @@ static char url[128];
 #define VAR_BUTTON_B_PROPERTY   "pb_lambda"
 #define RESET_TO_FACTORY_TIMEOUT 5000
 #define BUFSIZE                  128
+#define MAX_MAC_BYTES            6
 
 /* callback function invoked on reset to factory */
 static void device_reset_to_factory_cb()
@@ -144,23 +141,35 @@ static char private_key_buffer[AWS_PRIV_KEY_SIZE];
 #define THING_LEN 126
 #define REGION_LEN 16
 static char thing_name[THING_LEN];
-
+static char client_id[MAX_SIZE_OF_UNIQUE_CLIENT_ID_BYTES];
 /* populate aws shadow configuration details */
 static int aws_starter_load_configuration(ShadowParameters_t *sp)
 {
 	int ret = WM_SUCCESS;
 	char region[REGION_LEN];
+	uint8_t device_mac[MAX_MAC_BYTES];
 	memset(region, 0, sizeof(region));
 
 	/* read configured thing name from the persistent memory */
 	ret = read_aws_thing(thing_name, THING_LEN);
-	if (ret == WM_SUCCESS) {
-		sp->pMyThingName = thing_name;
-	} else {
-		/* if not found in memory, take the default thing name */
-		sp->pMyThingName = AWS_IOT_MY_THING_NAME;
+	if (ret != WM_SUCCESS) {
+		wmprintf("Failed to configure thing. Returning!\r\n");
+		return -WM_FAIL;
 	}
-	sp->pMqttClientId = AWS_IOT_MQTT_CLIENT_ID;
+	sp->pMyThingName = thing_name;
+
+	/* read device MAC address */
+	ret = read_aws_device_mac(device_mac);
+	if (ret != WM_SUCCESS) {
+		wmprintf("Failed to read device mac address. Returning!\r\n");
+		return -WM_FAIL;
+	}
+	/* Unique client ID in the format prefix-6 byte MAC address */
+	snprintf(client_id, MAX_SIZE_OF_UNIQUE_CLIENT_ID_BYTES,
+		 "%s-%02x%02x%02x%02x%02x%02x", AWS_IOT_MQTT_CLIENT_ID,
+		 device_mac[0], device_mac[1], device_mac[2],
+		 device_mac[3], device_mac[4], device_mac[5]);
+	sp->pMqttClientId = client_id;
 
 	/* read configured region name from the persistent memory */
 	ret = read_aws_region(region, REGION_LEN);
@@ -206,39 +215,6 @@ void shadow_update_status_cb(const char *pThingName, ShadowActions_t action,
 	} else if (status == SHADOW_ACK_ACCEPTED) {
 		wmprintf("Shadow publish state change accepted\r\n");
 	}
-}
-
-/* shadow yield thread which periodically checks for data */
-static void aws_shadow_yield(os_thread_arg_t data)
-{
-	while (1) {
-		/* periodically check if any data is received on socket */
-		aws_iot_shadow_yield(&mqtt_client, 500);
-	}
-}
-
-/* create shadow yield thread */
-static int aws_create_shadow_yield_thread()
-{
-	int ret;
-	ret = os_thread_create(
-		/* thread handle */
-		&aws_shadow_yield_thread,
-		/* thread name */
-		"awsShadowYield",
-		/* entry function */
-		aws_shadow_yield,
-		/* argument */
-		0,
-		/* stack */
-		&aws_shadow_yield_stack,
-		/* priority */
-		OS_PRIO_3);
-	if (ret != WM_SUCCESS) {
-		wmprintf("Failed to create shadow yield thread: %d\r\n", ret);
-		return -WM_FAIL;
-	}
-	return WM_SUCCESS;
 }
 
 /* This function will get invoked when led state change request is received */
@@ -353,15 +329,16 @@ static void aws_starter_demo(os_thread_arg_t data)
 		goto out;
 	}
 
-	/* creates a thread which will wait for incoming messages, ensuring the
-	 * connection is kept alive with the AWS Service
-	 */
-	aws_create_shadow_yield_thread();
-
 	while (1) {
 		/* Implement application logic here */
 
 		if (device_state == AWS_RECONNECTED) {
+			ret = aws_iot_shadow_init(&mqtt_client);
+			if (ret != WM_SUCCESS) {
+				wmprintf("aws shadow init failed: "
+					 "%d\r\n", ret);
+				goto out;
+			}
 			ret = aws_iot_shadow_connect(&mqtt_client, &sp);
 			if (ret != WM_SUCCESS) {
 				wmprintf("aws shadow reconnect failed: "
@@ -370,14 +347,16 @@ static void aws_starter_demo(os_thread_arg_t data)
 			} else {
 				device_state = AWS_CONNECTED;
 				led_on(board_led_2());
+				ret = aws_iot_shadow_register_delta(
+					&mqtt_client, &led_indicator);
+				wmprintf("Reconnected to cloud\r\n");
 			}
 		}
-
+		aws_iot_shadow_yield(&mqtt_client, 10);
 		ret = aws_publish_property_state(&sp);
 		if (ret != WM_SUCCESS)
 			wmprintf("Sending property failed\r\n");
-
-		os_thread_sleep(1000);
+		os_thread_sleep(100);
 	}
 
 	ret = aws_iot_shadow_disconnect(&mqtt_client);
@@ -410,8 +389,8 @@ void wlan_event_normal_connect_failed(void *data)
 void wlan_event_normal_connected(void *data)
 {
 	int ret;
-	/* Default time set to 1 October 2015 */
-	time_t time = 1443657600;
+	/* Default time set to 1 April 2016 */
+	time_t time = 1459468800;
 
 	wmprintf("Connected successfully to the configured network\r\n");
 

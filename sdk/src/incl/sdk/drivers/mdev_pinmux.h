@@ -10,6 +10,10 @@
  *  The functionality to be assigned to any particular pin can be
  *  configured using the PINMUX driver.
  *
+ *  @note Interface is kept similar to other mDev drivers, but there is no
+ *  need to register this driver with mDev, keeping simplicity and usage
+ *  from ISR context in mind.
+ *
  * @section mdev_pinmux_usage Usage
  *
  *  A typical PINMUX device usage scenario is as follows:
@@ -31,14 +35,11 @@
  *    pinmux_drv_init();
  *         .
  *         .
- *         .
  *    mdev_t* pinmux_dev = pinmux_drv_open("MDEV_PINMUX");
  *    if (pinmux_dev == NULL)
  *        err_handling();
  *
- *    int err = pinmux_drv_setfunc(pinmux_dev, pin, PINMUX_FUNCTION_0);
- *    if (err != WM_SUCESS)
- *        err_handling();
+ *    pinmux_drv_setfunc(pinmux_dev, pin, PINMUX_FUNCTION_0);
  *    pinmux_drv_close(pinmux_dev);
  *    return;
  *  }
@@ -47,7 +48,6 @@
  *
  */
 
-
 #ifndef _MDEV_PINMUX_H_
 #define _MDEV_PINMUX_H_
 
@@ -55,18 +55,13 @@
 #include <wmlog.h>
 #include <lowlevel_drivers.h>
 
-
-#define PINMUX_LOG(...)  wmlog("pinmux", ##__VA_ARGS__)
-
-
 /** Initialize the PINMUX driver
  *
- *  This function initializes PINMUX driver and registers
- *  it with mdev interface.
- *  @return WM_SUCCESS on success
- *  @return Error code otherwise
+ * This function initializes PINMUX driver
  */
-int pinmux_drv_init(void);
+static inline void pinmux_drv_init()
+{
+}
 
 /** Open PINMUX device driver
  *
@@ -77,29 +72,34 @@ int pinmux_drv_init(void);
  *  @param [in] name Name of mdev pinmux driver.
  *              It should be "MDEV_PINMUX" string.
  *  @return handle to driver on success
- *  @return NULL otherwise
  */
-mdev_t *pinmux_drv_open(const char *name);
+static inline mdev_t *pinmux_drv_open(const char *name)
+{
+	return (mdev_t *) 1;
+}
 
 /** Close the PINMUX device
  *
- * This function closes the handle to PINMUX device.
+ *  This function closes the handle to PINMUX device.
  *  @param [in] dev Handle to the PINMUX device returned by pinmux_drv_open().
- *  @return WM_SUCCESS on success
  */
-int pinmux_drv_close(mdev_t *dev);
+static inline void pinmux_drv_close(mdev_t *dev)
+{
+}
 
 /** Set alternate function of a GPIO pin
  *
  *  Sets the alternate function for the specified pin.
  *
- *  @param [in]  dev Handle to the PINMUX device returned by pinmux_drv_open().
+ *  @param [in] dev Handle to the PINMUX device returned by pinmux_drv_open().
  *  @param [in] pin Pin to be modified
  *  @param [in] func Alternate function number(GPIO_PinMuxFunc_Type)
- *  @return WM_SUCCESS on success
- *  @return -WM_FAIL  on error
  */
-int pinmux_drv_setfunc(mdev_t *dev, int pin, int func);
+static inline void pinmux_drv_setfunc(mdev_t *dev,
+			GPIO_NO_Type pin, GPIO_PinMuxFunc_Type func)
+{
+	GPIO_PinMuxFun(pin, func);
+}
 
 /** Get the GPIO pinmux function for a given pin
  *
@@ -112,7 +112,7 @@ int pinmux_drv_setfunc(mdev_t *dev, int pin, int func);
  * @param[in] pin Pin number
  *
  * @return The GPIO pinmux function for the given pin if successful.
- * @return -1 on error.
+ * @return -WM_E_INVAL on error.
  */
 int pinmux_drv_get_gpio_func(int pin);
 #endif /* _MDEV_PINMUX_H_ */

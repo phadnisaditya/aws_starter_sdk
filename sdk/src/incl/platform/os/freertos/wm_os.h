@@ -29,12 +29,9 @@
  * - Dynamic Memory Allocation: Dynamically allocate memory using
  *    os_mem_alloc(), os_mem_calloc() or os_mem_realloc() and free it using
  *    os_mem_free().
- * - Block Allocator: Create or delete memory pools for the block allocator
- *    using os_block_pool_create() or os_block_pool_delete(). Allocate memory
- *    blocks using os_block_alloc() and free it using os_block_free().
  *
  */
-/* Copyright 2008-2016, Marvell International Ltd.
+/* Copyright 2008-2015, Marvell International Ltd.
  * All Rights Reserved.
  */
 
@@ -63,6 +60,8 @@
 #define os_dprintf(...)
 #endif
 
+#define is_isr_context() (__get_IPSR() != 0)
+
 /* the OS timer register is loaded with CNTMAX */
 #define CNTMAX		((board_cpu_freq() / configTICK_RATE_HZ) - 1UL)
 #define CPU_CLOCK_TICKSPERUSEC	(board_cpu_freq()/1000000U)
@@ -84,15 +83,34 @@ static inline uint32_t os_get_usec_counter()
 /** Force a context switch */
 #define os_thread_relinquish() taskYIELD();
 
-/** Get current OS tick counter value */
-#define os_ticks_get()   xTaskGetTickCount()
+/** Get current OS tick counter value
+ *
+ * \return 32 bit value of ticks since boot-up
+ */
+static inline unsigned os_ticks_get()
+{
+	if (is_isr_context())
+		return xTaskGetTickCountFromISR();
+	else
+		return xTaskGetTickCount();
+}
 
-/** Get (wraparound safe) current OS tick counter. Returns a 64 bit
-    unsigned integer. To give a rough idea, for an OS tick period of 1 mS
-    it takes thousands of years before the counter value returned by this
-    API to wrap around. Thus, users of this API can ignore the wrap around
-    problem */
-#define os_total_ticks_get() xTaskGetTotalTickCount()
+/** Get (wraparound safe) current OS tick counter.
+ *
+ * Returns a 64 bit unsigned integer. To give a rough idea,
+ * for an OS tick period of 1 mS it takes thousands of years
+ * before the counter value returned by this API to wrap around.
+ * Thus, users of this API can ignore the wrap around problem.
+ *
+ * \return 64 bit value of ticks since boot-up
+ */
+static inline unsigned long long os_total_ticks_get()
+{
+	if (is_isr_context())
+		return xTaskGetTotalTickCountFromISR();
+	else
+		return xTaskGetTotalTickCount();
+}
 
 /** Get ticks to next thread wakeup */
 #define os_ticks_to_unblock()	xTaskGetUnblockTime()
@@ -130,6 +148,15 @@ typedef struct os_thread_stack {
 		{(stacksize) / (sizeof(portSTACK_TYPE))}
 
 typedef xTaskHandle os_thread_t;
+
+static inline const char *get_current_taskname()
+{
+	os_thread_t *handle = (os_thread_t *)xTaskGetCurrentTaskHandle();
+	if (handle)
+		return pcTaskGetTaskName(handle);
+	else
+		return "Unknown";
+}
 
 /** Create new thread
  *
@@ -294,8 +321,6 @@ static inline void os_thread_self_complete(os_thread_t *thandle)
 	while (1)
 		os_thread_sleep(os_msec_to_ticks(60000));
 }
-
-#define is_isr_context() (__get_IPSR() != 0)
 
 #define OS_PRIO_0     4	 /** High **/
 #define OS_PRIO_1     3
@@ -894,10 +919,19 @@ static inline int os_semaphore_create_counting(os_semaphore_t *mhandle,
 static inline int os_semaphore_get(os_semaphore_t *mhandle, unsigned long wait)
 {
 	int ret;
+	signed portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 	if (!mhandle || !(*mhandle))
 		return -WM_E_INVAL;
 	os_dprintf("OS: Semaphore Get: handle %p\r\n", *mhandle);
-	ret = xSemaphoreTake(*mhandle, wait);
+	if (is_isr_context()) {
+		/* This call is from Cortex-M3 handler mode, i.e. exception
+		 * context, hence use FromISR FreeRTOS APIs.
+		 */
+		ret = xSemaphoreTakeFromISR(*mhandle,
+					    &xHigherPriorityTaskWoken);
+		portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
+	} else
+		ret = xSemaphoreTake(*mhandle, wait);
 	return ret == pdTRUE ? WM_SUCCESS : -WM_FAIL;
 }
 /** Release semaphore
@@ -1158,6 +1192,7 @@ int os_timer_create(os_timer_t *timer_t, const char *name, os_timer_tick ticks,
  * @param[in] timer_t Pointer to a timer handle
  *
  * @return WM_SUCCESS if timer activated successfully
+ * @return -WM_E_INVAL if invalid parameters are passed
  * @return -WM_FAIL if timer fails to activate
  */
 int os_timer_activate(os_timer_t *timer_t);
@@ -1173,6 +1208,7 @@ int os_timer_activate(os_timer_t *timer_t);
  * @param[in] block_time  This option is currently not supported
  *
  * @return WM_SUCCESS on success
+ * @return -WM_E_INVAL if invalid parameters are passed
  * @return -WM_FAIL on failure
  */
 static inline int os_timer_change(os_timer_t *timer_t, os_timer_tick ntime,
@@ -1180,6 +1216,9 @@ static inline int os_timer_change(os_timer_t *timer_t, os_timer_tick ntime,
 {
 	int ret;
 	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+
+	if (!timer_t || !(*timer_t))
+		return -WM_E_INVAL;
 
 	if (is_isr_context()) {
 		/* This call is from Cortex-M3 handler mode, i.e. exception
@@ -1209,6 +1248,9 @@ static inline bool os_timer_is_running(os_timer_t *timer_t)
 {
 	int ret;
 
+	if (!timer_t || !(*timer_t))
+		return false;
+
 	ret = xTimerIsTimerActive(*timer_t);
 	return ret == pdPASS ? true : false;
 }
@@ -1227,6 +1269,9 @@ static inline bool os_timer_is_running(os_timer_t *timer_t)
  */
 static inline void *os_timer_get_context(os_timer_t *timer_t)
 {
+	if (!timer_t || !(*timer_t))
+		return (void *) -1;
+
 	return pvTimerGetTimerID(*timer_t);
 }
 
@@ -1242,6 +1287,7 @@ static inline void *os_timer_get_context(os_timer_t *timer_t)
  * @param[in] timer_t Pointer to a timer handle
  *
  * @return WM_SUCCESS on success
+ * @return -WM_E_INVAL if invalid parameters are passed
  * @return -WM_FAIL on failure
  */
 static inline int os_timer_reset(os_timer_t *timer_t)
@@ -1249,6 +1295,8 @@ static inline int os_timer_reset(os_timer_t *timer_t)
 	int ret;
 	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 
+	if (!timer_t || !(*timer_t))
+		return -WM_E_INVAL;
 	/* Note:
 	 * XTimerStop, seconds argument is xBlockTime which means, the time,
 	 * in ticks, that the calling task should be held in the Blocked
@@ -1273,6 +1321,7 @@ static inline int os_timer_reset(os_timer_t *timer_t)
  * @param [in] timer_t handle populated by os_timer_create()
  *
  * @return WM_SUCCESS on success
+ * @return -WM_E_INVAL if invalid parameters are passed
  * @return -WM_FAIL on failure
  */
 static inline int os_timer_deactivate(os_timer_t *timer_t)
@@ -1280,6 +1329,8 @@ static inline int os_timer_deactivate(os_timer_t *timer_t)
 	int ret;
 	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 
+	if (!timer_t || !(*timer_t))
+		return -WM_E_INVAL;
 	/* Note:
 	 * XTimerStop, seconds argument is xBlockTime which means, the time,
 	 * in ticks, that the calling task should be held in the Blocked
@@ -1304,15 +1355,27 @@ static inline int os_timer_deactivate(os_timer_t *timer_t)
  * @param[in] timer_t Pointer to a timer handle
  *
  * @return WM_SUCCESS on success
+ * @return -WM_E_INVAL if invalid parameters are passed
  * @return -WM_FAIL on failure
  */
 static inline int os_timer_delete(os_timer_t *timer_t)
 {
 	int ret;
+
+	if (!timer_t || !(*timer_t))
+		return -WM_E_INVAL;
+
+	/* Below timer handle invalidation needs to be protected as a context
+	 * switch may create issues if same handle is used before
+	 * invalidation.
+	 */
+	int sta = os_enter_critical_section();
 	/* Note: Block time is set as 0, thus signifying non-blocking
 	   API. Can be changed later if required. */
 	ret = xTimerDelete(*timer_t, 0);
 	*timer_t = NULL;
+	os_exit_critical_section(sta);
+
 	return ret == pdPASS ? WM_SUCCESS : -WM_FAIL;
 }
 
@@ -1446,7 +1509,7 @@ static inline void os_mem_free(void *ptr)
  */
 static inline int os_heap_add_bank(void *start, size_t size)
 {
-	int ret = prvHeapAddMemBank((start), (size));
+	int ret = prvHeapAddMemBank((char *)(start), (size));
 	return ret == pdPASS ? WM_SUCCESS : -WM_FAIL;
 }
 
@@ -1464,6 +1527,8 @@ static inline void os_dump_mem_stats(void)
 		       hI->heapSize);
 	wmprintf("Free size ---------------------- : %d\n\r",
 		       hI->freeSize);
+	wmprintf("Peak Heap Usage since bootup --- : %d\n\r",
+		       hI->peakHeapUsage);
 	wmprintf("Total allocations -------------- : %d\n\r",
 		       hI->totalAllocations);
 	wmprintf("Failed allocations ------------- : %d\n\r",

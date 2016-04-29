@@ -11,8 +11,10 @@ typedef unsigned int size_t;
 #define _PTRDIFF_T
 typedef signed int ptrdiff_t;
 
+#ifndef __ICCARM__
 #define _WINT_T
 typedef signed int wint_t;
+#endif
 
 #undef NULL
 #ifdef __cplusplus

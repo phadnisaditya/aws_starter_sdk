@@ -65,7 +65,7 @@
  */
 
 /*
- *  Copyright 2008-2016, Marvell International Ltd.
+ *  Copyright 2008-2015, Marvell International Ltd.
  *  All Rights Reserved.
  */
 
@@ -184,7 +184,7 @@ int dma_drv_set_cb(mdev_t *mdev_dma, dma_irq_cb dma_cb, void *data);
 int dma_drv_transfer(mdev_t *mdev_dma, dma_config_t *dmac);
 
 /**
- * Wait for transfer complete on a perticular dma channel.
+ * Wait for transfer complete on a particular dma channel.
  *
  * @par
  * This API waits for a specified time for DMA transfer to complete.

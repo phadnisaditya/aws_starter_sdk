@@ -1,4 +1,4 @@
-# Copyright (C) 2008-2016, Marvell International Ltd.
+# Copyright (C) 2008-2015, Marvell International Ltd.
 # All Rights Reserved.
 
 os_dir := Windows
@@ -11,3 +11,8 @@ mconf_not_on_mingw:
 	@echo "Please use 'make config' instead"
 	@echo ""
 	@false
+
+# Function to resolve input path
+define b-abspath
+$(join $(filter %:,$(subst :,: ,$(1))),$(abspath $(filter-out %:,$(subst :,: ,$(subst \,/,$(1))))))
+endef

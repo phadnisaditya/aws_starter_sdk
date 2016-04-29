@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008-2016, Marvell International Ltd.
+ *  Copyright 2008-2015, Marvell International Ltd.
  *  All Rights Reserved.
  */
 
@@ -63,6 +63,19 @@ int read_aws_region(char *region, unsigned region_len);
  * \return error code otherwise
  */
 int read_aws_thing(char *thing, unsigned thing_len);
+
+/** Read device mac address
+ *
+ * This API copies the AWS device MAC address to the 6-byte array pointed by
+ * \a device_mac. In the event of an error, nothing is copied to \a device_mac.
+ *
+ * \param[out] device_mac A pointer to a 6-byte array where the MAC address
+ *             will be copied.
+ *
+ * \return WM_SUCCESS on success
+ * \return error code otherwise
+ */
+int read_aws_device_mac(uint8_t *device_mac);
 
 /** Enable AWS Configuration during provisioning
  *

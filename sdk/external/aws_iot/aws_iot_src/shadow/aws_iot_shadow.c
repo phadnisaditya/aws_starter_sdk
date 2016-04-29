@@ -21,7 +21,6 @@
 #include "aws_iot_shadow_records.h"
 
 const ShadowParameters_t ShadowParametersDefault = {
-		.pMyThingName = AWS_IOT_MY_THING_NAME,
 		.pMqttClientId = AWS_IOT_MQTT_CLIENT_ID,
 		.pHost = AWS_IOT_MQTT_HOST,
 		.port = AWS_IOT_MQTT_PORT,

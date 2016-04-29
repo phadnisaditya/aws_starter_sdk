@@ -107,12 +107,34 @@
  */
 #define MEM_ALIGNMENT                   4
 
+/* Value of TCP_SND_BUF_COUNT denotes the number of buffers and is set by
+ * CONFIG option available in the SDK
+ */
+#define TCP_SND_BUF (TCP_SND_BUF_COUNT * TCP_MSS)
+
+/* Buffer size needed for TCP: Max. number of TCP sockets * Size of pbuf *
+ * Max. number of TCP sender buffers per socket
+ *
+ * Listening sockets for TCP servers do not require the same amount buffer
+ * space. Hence do not consider these sockets for memory computation
+ */
+#define TCP_MEM_SIZE (MAX_SOCKETS_TCP * \
+		PBUF_POOL_BUFSIZE * (TCP_SND_BUF/TCP_MSS))
+
+/* Buffer size needed for UDP: Max. number of UDP sockets * Size of pbuf
+ */
+#define UDP_MEM_SIZE (MAX_SOCKETS_UDP * PBUF_POOL_BUFSIZE)
+
 /**
  * MEM_SIZE: the size of the heap memory. If the application will send
  * a lot of data that needs to be copied, this should be set high.
  */
 #ifndef FIT_FOR_PM3
-#define MEM_SIZE                        (8*1024)
+#if (TCPIP_STACK_TX_HEAP_SIZE == 0)
+#define MEM_SIZE (TCP_MEM_SIZE + UDP_MEM_SIZE)
+#else
+#define MEM_SIZE (TCPIP_STACK_TX_HEAP_SIZE*1024)
+#endif
 #else
 #define MEM_SIZE                        (1*1024)
 #endif
@@ -139,10 +161,12 @@
  * (requires the LWIP_TCP option)
  */
 #ifndef FIT_FOR_PM3
-#define MEMP_NUM_TCP_PCB                10
+#define MEMP_NUM_TCP_PCB                MAX_SOCKETS_TCP
 #else
 #define MEMP_NUM_TCP_PCB                5
 #endif
+
+#define MEMP_NUM_TCP_PCB_LISTEN         MAX_LISTENING_SOCKETS_TCP
 
 /**
  * MEMP_NUM_TCP_SEG: the number of simultaneously queued TCP segments.
@@ -178,8 +202,13 @@
 /**
  * MEMP_NUM_NETCONN: the number of struct netconns.
  * (only needed if you use the sequential API, like api_lib.c)
+ *
+ * This number corresponds to the maximum number of active sockets at any
+ * given point in time. This number must be sum of max. TCP sockets, max. TCP
+ * sockets used for listening, and max. number of UDP sockets
  */
-#define MEMP_NUM_NETCONN		16
+#define MEMP_NUM_NETCONN	(MAX_SOCKETS_TCP + \
+	MAX_LISTENING_SOCKETS_TCP + MAX_SOCKETS_UDP)
 
 /**
  * PBUF_POOL_SIZE: the number of buffers in the pbuf pool.
@@ -298,7 +327,10 @@
 
 #define MDNS_TABLE_SIZE                 1  // number of mDNS table entries
 #define MDNS_MAX_SERVERS                1  // number of mDNS multicast addresses
-#define MEMP_NUM_UDP_PCB		12 /* Number of UDP PCBs*/
+/* TODO: Number of active UDP PCBs is equal to number of active UDP sockets plus
+ * two. Need to find the users of these 2 PCBs
+ */
+#define MEMP_NUM_UDP_PCB		(MAX_SOCKETS_UDP + 2)
 /* NOTE: some times the socket() call for SOCK_DGRAM might fail if you dont
  * have enough MEMP_NUM_UDP_PCB */
 
@@ -313,17 +345,25 @@
 #define LWIP_IGMP                       1
 
 /**
+ * LWIP_SO_SNDTIMEO==1: Enable send timeout for sockets/netconns and
+ * SO_SNDTIMEO processing.
+ */
+#define LWIP_SO_SNDTIMEO                1
+
+/**
  * LWIP_SO_RCVTIMEO==1: Enable receive timeout for sockets/netconns and
  * SO_RCVTIMEO processing.
  */
-
 #define LWIP_SO_RCVTIMEO                1
+#define LWIP_SO_SNDTIMEO                1
 /**
  * TCP_LISTEN_BACKLOG==1: Handle backlog connections.
  */
 #define TCP_LISTEN_BACKLOG		1
 
-#define LWIP_PROVIDE_ERRNO		1
+/* wmsdk; This is not needed now as error codes are taken from standard libc */
+/* #define LWIP_PROVIDE_ERRNO		1 */
+#include <compat_errno.h>
 #define ERRNO				1
 
 //#define LWIP_SNMP 1

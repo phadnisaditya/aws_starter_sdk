@@ -1,4 +1,4 @@
-/*  Copyright 2008-2016, Marvell International Ltd.
+/*  Copyright 2008-2015, Marvell International Ltd.
  *  All Rights Reserved.
  */
 
@@ -15,7 +15,7 @@
  * @section mdev_ssp_usage Usage
  *
  * -# Verify that board file API board_ssp_pin_config() located at
- *  wmsdk/src/boards/{board_file}.c reflects the correct pinmux settings.
+ *  sdk/src/boards/{board_file}.c reflects the correct pinmux settings.
  *  If found missing, please add the appropriate pinmux configuration
  *  corresponding to the SSP_ID_Type.
 

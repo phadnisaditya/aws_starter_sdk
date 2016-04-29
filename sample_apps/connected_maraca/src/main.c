@@ -30,6 +30,7 @@
 #include <wm_os.h>
 #include <mdev_i2c.h>
 #include <push_button.h>
+#include <stdlib.h>
 
 /* configuration parameters */
 #include <aws_iot_config.h>
@@ -62,6 +63,7 @@ static char url[128];
 #define BUFSIZE                  200
 #define THRESHOLD_ACC            2
 #define DEVICE_ID                "<INSERT_YOUR_DEVICE_ID>"
+#define MAX_MAC_BYTES            6
 
 /* callback function invoked on reset to factory */
 static void device_reset_to_factory_cb()
@@ -93,23 +95,35 @@ static char private_key_buffer[AWS_PRIV_KEY_SIZE];
 #define THING_LEN 126
 #define REGION_LEN 16
 static char thing_name[THING_LEN];
-
+static char client_id[MAX_SIZE_OF_UNIQUE_CLIENT_ID_BYTES];
 /* populate aws shadow configuration details */
 static int aws_starter_load_configuration(ShadowParameters_t *sp)
 {
 	int ret = WM_SUCCESS;
 	char region[REGION_LEN];
+	uint8_t device_mac[MAX_MAC_BYTES];
 	memset(region, 0, sizeof(region));
 
 	/* read configured thing name from the persistent memory */
 	ret = read_aws_thing(thing_name, THING_LEN);
-	if (ret == WM_SUCCESS) {
-		sp->pMyThingName = thing_name;
-	} else {
-		/* if not found in memory, take the default thing name */
-		sp->pMyThingName = AWS_IOT_MY_THING_NAME;
+	if (ret != WM_SUCCESS) {
+		wmprintf("Failed to configure thing. Returning!\r\n");
+		return -WM_FAIL;
 	}
-	sp->pMqttClientId = AWS_IOT_MQTT_CLIENT_ID;
+	sp->pMyThingName = thing_name;
+
+	/* read device MAC address */
+	ret = read_aws_device_mac(device_mac);
+	if (ret != WM_SUCCESS) {
+		wmprintf("Failed to read device mac address. Returning!\r\n");
+		return -WM_FAIL;
+	}
+	/* Unique client ID in the format prefix-6 byte MAC address */
+	snprintf(client_id, MAX_SIZE_OF_UNIQUE_CLIENT_ID_BYTES,
+		 "%s-%02x%02x%02x%02x%02x%02x", AWS_IOT_MQTT_CLIENT_ID,
+		 device_mac[0], device_mac[1], device_mac[2],
+		 device_mac[3], device_mac[4], device_mac[5]);
+	sp->pMqttClientId = client_id;
 
 	/* read configured region name from the persistent memory */
 	ret = read_aws_region(region, REGION_LEN);

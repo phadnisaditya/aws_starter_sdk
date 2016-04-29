@@ -27,6 +27,7 @@
 #ifndef __TIMER_INTERFACE_H_
 #define __TIMER_INTERFACE_H_
 
+#include <compat_compiler.h>
 #include <wm_os.h>
 
 // Add the platform specific timer includes to define the Timer struct

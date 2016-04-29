@@ -44,7 +44,7 @@ __extern long jrand48(unsigned short *);
 __extern long mrand48(void);
 __extern long nrand48(unsigned short *);
 __extern long lrand48(void);
-__extern unsigned short *seed48(const unsigned short *);
+__extern unsigned short *seed48(unsigned short *);
 __extern void srand48(long);
 
 #define RAND_MAX 0x7fffffff

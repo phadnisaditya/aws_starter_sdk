@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright 2008-2016, Marvell International Ltd.
+ * Copyright 2008-2015, Marvell International Ltd.
  * All Rights Reserved.
  */
 
@@ -233,7 +233,7 @@ uint32_t sample_initialise_random_seed();
  * @param[in] size The number of bytes of the random sequence required
  *
  */
-void get_random_sequence(unsigned char *buf, unsigned int size);
+void get_random_sequence(void *buf, unsigned int size);
 
 #ifdef CONFIG_DEBUG_BUILD
 /** Dump buffer in hex format on console
@@ -254,9 +254,15 @@ void dump_hex(const void *data, unsigned len);
  * \param[in] len Length of the data
  */
 void dump_hex_ascii(const void *data, unsigned len);
+void dump_ascii(const void *data, unsigned len);
+void print_ascii(const void *data, unsigned len);
+void dump_json(const void *buffer, unsigned len);
 #else
 #define dump_hex(...) do {} while (0)
 #define dump_hex_ascii(...) do {} while (0)
+#define dump_ascii(...) do {} while (0)
+#define print_ascii(...) do {} while (0)
+#define dump_json(...) do {} while (0)
 #endif /* CONFIG_DEBUG_BUILD */
 
 #ifndef __linux__
@@ -293,4 +299,35 @@ char *strdup(const char *s);
 uint32_t soft_crc32(const void *__data, int data_size, uint32_t crc);
 float wm_strtof(const char *str, char **endptr);
 
+/**
+ * Fill the given buffer with a sequential pattern starting from
+ * given byte.
+ *
+ * For example, if the 'first_byte' is 0x45 and buffer size of 5 then
+ * buffer will be set to {0x45, 0x46, 0x47, 0x48, 0x49}
+ * @param[in] buffer The pattern will be set to this buffer.
+ * @param[in] size Number of pattern bytes to the be written to the buffer.
+ * @param[in] first_byte This is the value of first byte in the sequential
+ * pattern.
+ *
+ * @return void
+ */
+void fill_sequential_pattern(void *buffer, int size, uint8_t first_byte);
+
+/**
+ * Verify if the the given buffer has a sequential pattern starting from
+ * given byte.
+ *
+ * For example, if the 'first_byte' is 0x45 and buffer size of 5 then
+ * buffer will be verified for presence of {0x45, 0x46, 0x47, 0x48, 0x49}
+ * @param[in] buffer The pattern will be verified from this buffer.
+ * @param[in] size Number of pattern bytes to the be verified from the buffer.
+ * @param[in] first_byte This is the value of first byte in the sequential
+ * pattern.
+ *
+ * @return 'true' If verification successful.
+ * @return 'false' If verification fails.
+ */
+bool verify_sequential_pattern(const void *buffer, int size,
+			       uint8_t first_byte);
 #endif

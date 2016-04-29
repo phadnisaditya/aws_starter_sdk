@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2008-2016, Marvell International Ltd.
+# Copyright (C) 2008-2015, Marvell International Ltd.
 # All Rights Reserved.
 #
 # This script can be invoked to add linux user to groups 'plugdev'

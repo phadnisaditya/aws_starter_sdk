@@ -10,6 +10,15 @@
 #include <extern.h>
 #include <compiler.h>
 
+#define _U      (1 << 0)
+#define _L      (1 << 1)
+#define _N      (1 << 2)
+#define _S      (1 << 3)
+#define _P      (1 << 4)
+#define _C      (1 << 5)
+#define _X      (1 << 6)
+#define _B      (1 << 7)
+
 /*
  * This relies on the following definitions:
  *
@@ -19,14 +28,14 @@
  * blank = '\t' || ' ' (per POSIX requirement)
  */
 enum {
-	__ctype_upper = (1 << 0),
-	__ctype_lower = (1 << 1),
-	__ctype_digit = (1 << 2),
-	__ctype_xdigit = (1 << 3),
-	__ctype_space = (1 << 4),
-	__ctype_print = (1 << 5),
-	__ctype_punct = (1 << 6),
-	__ctype_cntrl = (1 << 7),
+	__ctype_upper = _U,
+	__ctype_lower = _L,
+	__ctype_digit = _N,
+	__ctype_xdigit = _S,
+	__ctype_space = _P,
+	__ctype_print = _C,
+	__ctype_punct = _X,
+	__ctype_cntrl = _B
 };
 
 __extern int isalnum(int);
@@ -128,30 +137,4 @@ __must_inline int __ctype_tolower(int __c)
 	return __ctype_isupper(__c) ? _tolower(__c) : __c;
 }
 
-#ifdef __CTYPE_NO_INLINE
-# define __CTYPEFUNC(X) \
-  __extern int X(int);
-#else
-#define __CTYPEFUNC(X) \
-  __extern __inline int X(int __c)		\
-  {						\
-    return __ctype_##X(__c); 			\
-  }
-#endif
-
-__CTYPEFUNC(isalnum)
-__CTYPEFUNC(isalpha)
-__CTYPEFUNC(isascii)
-__CTYPEFUNC(isblank)
-__CTYPEFUNC(iscntrl)
-__CTYPEFUNC(isdigit)
-__CTYPEFUNC(isgraph)
-__CTYPEFUNC(islower)
-__CTYPEFUNC(isprint)
-__CTYPEFUNC(ispunct)
-__CTYPEFUNC(isspace)
-__CTYPEFUNC(isupper)
-__CTYPEFUNC(isxdigit)
-__CTYPEFUNC(toupper)
-__CTYPEFUNC(tolower)
 #endif				/* _CTYPE_H */
