@@ -3,7 +3,7 @@
  */
 
 /*
- * Copyright (C) 2008-2016, Marvell International Ltd.
+ * Copyright (C) 2008-2015, Marvell International Ltd.
  * All Rights Reserved.
  */
 #ifndef __GENERIC_IO_H__
@@ -20,7 +20,7 @@
  * Normally used for push buttons. */
 typedef struct {
 	/** The GPIO number associated with this input. */
-	int gpio;
+	int8_t gpio;
 	/** The type of the input. Can be either \ref GPIO_ACTIVE_LOW
 	 * or \ref GPIO_ACTIVE_HIGH. This indicates what the state of
 	 * the GPIO will be when the button is pressed.
@@ -32,7 +32,7 @@ typedef struct {
  * Normally used for LED indicators or for driving loads. */
 typedef struct {
 	/** The GPIO number associated with this output. */
-	int gpio;
+	int8_t gpio;
 	/** The type of the output. Can be either \ref GPIO_ACTIVE_LOW
 	 * or \ref GPIO_ACTIVE_HIGH.
 	 */

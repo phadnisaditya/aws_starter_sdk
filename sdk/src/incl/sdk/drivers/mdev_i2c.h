@@ -1,4 +1,4 @@
-/*  Copyright 2008-2016, Marvell International Ltd.
+/*  Copyright 2008-2015, Marvell International Ltd.
  *  All Rights Reserved.
  */
 
@@ -154,7 +154,7 @@ typedef enum {
 
 /** Initialize  I2C Driver
  *
- *  This function initializes I2C driver. And registers the deivce
+ *  This function initializes I2C driver and registers the device
  *  with the mdev interface.
 
  * @param[in] id I2C device to be used.
@@ -199,7 +199,7 @@ int i2c_drv_rxbuf_size(I2C_ID_Type i2c_id, uint32_t size);
 
 /** set I2C transfer mode
   *
-  * This is an optional call to set I2C trasfer mode. By default I2C trasfer
+  * This is an optional call to set I2C trasfer mode. By default I2C transfer
   * mode is set to I2C_DMA_DISABLE. This function should be called after
   * i2c_drv_init() and before i2c_drv_open() call to enable DMA transfer mode.
   * Master write and slave read over I2C bus using DMA are supported.

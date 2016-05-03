@@ -323,6 +323,9 @@ void stats_init(void);
 #define ND6_STATS_DISPLAY()
 #endif
 
+int lwip_get_total_heap(void);
+int lwip_get_current_heap_use(void);
+
 /* Display of statistics */
 #if LWIP_STATS_DISPLAY
 void stats_display(char *name);

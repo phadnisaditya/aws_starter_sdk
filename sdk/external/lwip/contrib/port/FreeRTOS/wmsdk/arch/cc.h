@@ -34,6 +34,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <compat_time.h>
 
 #include "cpu.h"
 extern unsigned int os_get_timestamp();

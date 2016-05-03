@@ -56,6 +56,12 @@ define create-tc-target
 $(1)-compat-libs: $(b-$(1)-libs-y)
 $(1)-compat-apps: $(b-$(1)-exec-y)
 
+# Application build depend on library build
+$(b-$(1)-exec-y): $(b-$(1)-libs-y)
+
+$(1)-compat-libs.clean: $(foreach l,$(b-$(1)-libs-y),$(l).clean)
+$(1)-compat-apps.clean: $(foreach e,$(b-$(1)-exec-y),$(e).clean)
+
 endef
 
 $(foreach t,$(b-supported-toolchain-y),$(eval $(call create-tc-target,$(t))))

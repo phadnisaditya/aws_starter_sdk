@@ -42,6 +42,7 @@ global-cflags-y += \
 	 -Isdk/src/incl/sdk/drivers/$(arch_name-y)      \
 	 -Isdk/src/incl/sdk/drivers/$(arch_name-y)/regs \
 	 -Isdk/src/incl/sdk/drivers/wlan                \
+	 -Isdk/src/incl/libc/GCC
 
 ######### Tools
 t_cp    := "$(shell which cp | tail -1)"

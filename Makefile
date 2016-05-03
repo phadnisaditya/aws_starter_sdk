@@ -13,7 +13,6 @@ subdir-y += sdk/external/lwip
 
 # pre-built libraries
 subdir-y += sdk/libs
-
 ifeq ($(APP),)
 -include sample_apps/sample_apps.mk
 else

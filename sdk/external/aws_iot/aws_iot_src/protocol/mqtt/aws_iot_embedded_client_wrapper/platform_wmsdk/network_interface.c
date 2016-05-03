@@ -208,7 +208,7 @@ int iot_tls_read(Network *pNetwork, unsigned char *pMsg, int len, int timeout_ms
 		recv_len += val;
 	} while (recv_len < len);
 
-	return val;
+	return recv_len;
 }
 
 int iot_tls_write(Network *pNetwork, unsigned char *pMsg, int len, int timeout_ms) 

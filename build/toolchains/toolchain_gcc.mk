@@ -36,6 +36,9 @@ endif
 tc-env := GCC
 tc-gcc-env-y := y
 
+tc-install-dir-y := for_gcc
+tc-install-dir-$(use_extd_libc) := for_extd
+
 # define disable-lto-for empty
 disable-lto-for :=
 
@@ -120,7 +123,7 @@ endif
 
 define b-cmd-axf
   @echo " [axf] $(call b-abspath,$(2))"
-  $(AT)$($(1)-LD) -o $(2) $($(1)-objs-y) $($(1)-lflags-y) $($(1)-cflags-y) -Xlinker --start-group $($(1)-prebuilt-libs-y) $($(1)-libs-paths-y) $(global-prebuilt-libs-y) -Xlinker --end-group -T $($(1)-linkerscript-y) -Xlinker -M -Xlinker -Map -Xlinker $(2:%.axf=%.map) $(tc-lflags-y)
+  $(AT)$($(1)-LD) -o $(2) $($(1)-objs-y) $($(1)-lflags-y) $($(1)-cflags-y) -Xlinker --start-group $($(1)-prebuilt-libs-y) $($(1)-libs-paths-y) $(global-prebuilt-libs-y) -Xlinker --end-group -T $($(1)-linkerscript-y) -Xlinker -M -Xlinker -Map -Xlinker $(2:%.axf=%.map) $(tc-lflags-y) $(global-cflags-y)
 endef
 
 define b-cmd-archive

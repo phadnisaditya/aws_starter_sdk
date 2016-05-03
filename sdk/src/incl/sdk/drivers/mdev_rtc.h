@@ -66,7 +66,7 @@
  *
  */
 /*
- *  Copyright 2008-2016, Marvell International Ltd.
+ *  Copyright 2008-2015, Marvell International Ltd.
  *  All Rights Reserved.
  */
 
@@ -96,7 +96,7 @@ int rtc_drv_init(void);
  *            string
  * \return NULL if error, mdev_t handle otherwise.
  */
-extern mdev_t *rtc_drv_open(const char *name);
+mdev_t *rtc_drv_open(const char *name);
 
 /** Set RTC Configuration
  *
@@ -107,7 +107,7 @@ extern mdev_t *rtc_drv_open(const char *name);
  * and does to to this value. Frequency is 1KHz by default for A0 version of
  * chip and 32KHz for Z1 or earlier chips.
  */
-extern void rtc_drv_set(mdev_t *dev, uint32_t cnt_upp);
+void rtc_drv_set(mdev_t *dev, uint32_t cnt_upp);
 
 /** Set RTC callback handler for UPP Val
  *
@@ -116,7 +116,7 @@ extern void rtc_drv_set(mdev_t *dev, uint32_t cnt_upp);
  * \param[in] user_cb application registered callback handler, if func is NULL
  * then the callback is unset.
  */
-extern void rtc_drv_set_cb(void *user_cb);
+void rtc_drv_set_cb(void *user_cb);
 
 /** Set RTC callback handler for Alarm
  *
@@ -125,8 +125,7 @@ extern void rtc_drv_set_cb(void *user_cb);
  * \param[in] user_cb application registered callback handler, if func is NULL
  * then the callback is unset.
  */
-
-extern void rtc_drv_set_alarm_cb(void *user_cb);
+void rtc_drv_set_alarm_cb(void *user_cb);
 
 /** Reset RTC counter
  *
@@ -134,7 +133,7 @@ extern void rtc_drv_set_alarm_cb(void *user_cb);
  *
  * \param[in] dev mdev_t handle to the driver.
  */
-extern void rtc_drv_reset(mdev_t *dev);
+void rtc_drv_reset(mdev_t *dev);
 
 /** Start RTC device
  *
@@ -142,7 +141,7 @@ extern void rtc_drv_reset(mdev_t *dev);
  *
  * \param[in] dev mdev_t handle to the driver.
  */
-extern void rtc_drv_start(mdev_t *dev);
+void rtc_drv_start(mdev_t *dev);
 
 /** Get RTC counter value.
  *
@@ -151,7 +150,7 @@ extern void rtc_drv_start(mdev_t *dev);
  * \param[in] dev mdev_t handle to the driver.
  * \return the counter value.
  */
-extern unsigned int rtc_drv_get(mdev_t *dev);
+unsigned int rtc_drv_get(mdev_t *dev);
 
 /** Get RTC upper count value.
  *
@@ -162,8 +161,7 @@ extern unsigned int rtc_drv_get(mdev_t *dev);
  * \param[in] dev mdev_t handle to the driver.
  * \return the upper count value.
  */
-extern unsigned int rtc_drv_get_uppval(mdev_t *dev);
-
+unsigned int rtc_drv_get_uppval(mdev_t *dev);
 
 /** Set RTC ALARM
  *
@@ -173,8 +171,7 @@ extern unsigned int rtc_drv_get_uppval(mdev_t *dev);
  * \param[in] cnt_alarm  value at which Alarm interrupt will be generated.
  *  Frequency is 1KHz by default.
  */
-inline void rtc_drv_set_alarm(mdev_t *dev,
-			      uint32_t cnt_alarm);
+void rtc_drv_set_alarm(mdev_t *dev, uint32_t cnt_alarm);
 
 /** Stop RTC device
  *
@@ -182,7 +179,7 @@ inline void rtc_drv_set_alarm(mdev_t *dev,
  *
  * \param[in] dev mdev_t handle to the driver.
  */
-extern void rtc_drv_stop(mdev_t *dev);
+void rtc_drv_stop(mdev_t *dev);
 
 /** Close RTC Device
  *
@@ -191,6 +188,6 @@ extern void rtc_drv_stop(mdev_t *dev);
  * \param[in] dev mdev handle to the driver to be closed.
  * \return WM_SUCCESS on success, -WM_FAIL on error.
  */
-extern int rtc_drv_close(mdev_t *dev);
+int rtc_drv_close(mdev_t *dev);
 
 #endif /* _MDEV_RTC_H_ */

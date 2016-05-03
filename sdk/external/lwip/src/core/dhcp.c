@@ -739,7 +739,7 @@ dhcp_start(struct netif *netif)
   if (result != ERR_OK) {
     /* free resources allocated above */
     dhcp_stop(netif);
-    return ERR_MEM;
+    return result;
   }
   /* Set the flag that says this netif is handled by DHCP. */
   netif->flags |= NETIF_FLAG_DHCP;
@@ -1690,6 +1690,8 @@ dhcp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t
     dhcp->request_timeout = 0;
     /* remember offered lease */
     dhcp_handle_offer(netif);
+  } else {
+    LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE, ("unhandled reply %d\n", msg_type));
   }
 free_pbuf_and_return:
   dhcp->msg_in = NULL;

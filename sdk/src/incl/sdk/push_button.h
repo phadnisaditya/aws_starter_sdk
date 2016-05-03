@@ -3,7 +3,7 @@
  */
 
 /*
- *  Copyright (C) 2008-2016, Marvell International Ltd.
+ *  Copyright (C) 2008-2015, Marvell International Ltd.
  *  All Rights Reserved.
  */
 
@@ -16,7 +16,7 @@
 #define	MAX_PB_CB		4
 
 /** Default key debounce time in milliseconds */
-#define PB_DEF_DEBOUNCE_TIME	100
+#define PB_DEF_DEBOUNCE_TIME	50
 
 /** Set a callback function for push button operations
  *
@@ -131,4 +131,30 @@ int push_button_set_cb(input_gpio_cfg_t input, gpio_irq_cb pb_cb,
  * behavior.
  */
 int push_button_reset_cb(input_gpio_cfg_t input, int time);
+
+/** Set push button debounce time
+ *
+ * When physical push buttons are pressed or released, they do not go to
+ * the desired logic level directly. Instead, there are multiple oscillations
+ * as the contacts bounce. This results in multiple press/release events
+ * instead of a single one. To avoid this, the push button module implements
+ * a key debouncing logic. However, the debounce time (time it takes
+ * for the push button to settle) may vary from button to button. By default,
+ * it is set to \ref PB_DEF_DEBOUNCE_TIME. If this is not suitable for a
+ * particular push button, this API can be used to configure the time.
+ *
+ * \pre push_button_set_cb()
+ *
+ * \note *Guideline for deciding the value of time*: If a single button
+ * press causes multiple events, try increasing the value. If some push
+ * button press events are getting missed, try reducing the value.
+ *
+ * \param[in] input The push button configuration as per \ref input_gpio_cfg_t.
+ * Should be the same as passed to push_button_set_cb().
+ * \param[in] db_time The desired debounce time in msecs.
+ *
+ * \return WM_SUCCESS on success
+ * \return -WM_FAIL on failure
+ */
+int push_button_set_debounce_time(input_gpio_cfg_t input, uint16_t db_time);
 #endif /* ! __PUSH_BUTTON_H__ */

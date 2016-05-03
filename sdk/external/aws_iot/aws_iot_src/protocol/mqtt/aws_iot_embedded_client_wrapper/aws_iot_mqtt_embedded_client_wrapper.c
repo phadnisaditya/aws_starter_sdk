@@ -26,7 +26,7 @@ static unsigned char writebuf[AWS_IOT_MQTT_TX_BUF_LEN];
 static unsigned char readbuf[AWS_IOT_MQTT_RX_BUF_LEN];
 
 const MQTTConnectParams MQTTConnectParamsDefault = {
-		.enableAutoReconnect = 0,
+		.enableAutoReconnect = 1,
 		.pHostURL = AWS_IOT_MQTT_HOST,
 		.port = AWS_IOT_MQTT_PORT,
 		.pRootCALocation = NULL,
@@ -36,12 +36,12 @@ const MQTTConnectParams MQTTConnectParamsDefault = {
 		.pUserName = NULL,
 		.pPassword = NULL,
 		.MQTTVersion = MQTT_3_1_1,
-		.KeepAliveInterval_sec = 10,
+		.KeepAliveInterval_sec = 60,
 		.isCleansession = true,
 		.isWillMsgPresent = false,
 		.will={.pTopicName = NULL, .pMessage = NULL, .isRetained = false, .qos = QOS_0},
-		.mqttCommandTimeout_ms = 1000,
-		.tlsHandshakeTimeout_ms = 2000,
+		.mqttCommandTimeout_ms = 30000,
+		.tlsHandshakeTimeout_ms = 60000,
 		.isSSLHostnameVerify = true,
 		.disconnectHandler = NULL
 };

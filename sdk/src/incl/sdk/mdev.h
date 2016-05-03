@@ -60,7 +60,7 @@ extern mdev_t *fmrx_dev;
 
  /*******************************************************************/
 /*!
- *  \name Marvell Device Driver Accessor Functions
+ *  \name Marvell Device Driver Accessory Functions
  * @{
  */
 /******************************************************************/

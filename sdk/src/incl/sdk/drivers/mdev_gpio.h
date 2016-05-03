@@ -9,6 +9,10 @@
  * They are used for sending control signals like chip select
  * and clock.
  *
+ *  @note Interface is kept similar to other mDev drivers, but there is no
+ *  need to register this driver with mDev, keeping simplicity and usage
+ *  from ISR context in mind.
+ *
  * @section mdev_gpio_usage Usage
  *
  *  A typical GPIO device usage scenario is as follows:
@@ -39,13 +43,8 @@
  *    mdev_t* gpio_dev = gpio_drv_open("MDEV_GPIO");
  *    if (gpio_dev == NULL)
  *       err_handling();
- *    int err = gpio_drv_setdir(gpio_dev, pin, GPIO_IO_OUTPUT);
- *    if (err != WM_SUCCESS)
- *       err_handling();
-
- *    err = gpio_drv_write(gpio_dev, pin, GPIO_IO_HIGH);
- *    if (err != WM_SUCCESS)
- *       err_handling();
+ *    gpio_drv_setdir(gpio_dev, pin, GPIO_IO_OUTPUT);
+ *    gpio_drv_write(gpio_dev, pin, GPIO_IO_HIGH);
  *    gpio_drv_close(gpio_dev);
  *    return;
  *  }
@@ -80,12 +79,10 @@
  *  {
  *      process_interrupt_of_gpio();
  *  }
-
  *  {
  *    int err = gpio_drv_init();
  *    if (err != WM_SUCCESS)
  *       err_handling();
-
  *         .
  *         .
  *         .
@@ -93,9 +90,7 @@
  *    if (gpio_dev == NULL)
  *       err_handling();
  *
- *    int err = gpio_drv_setdir(gpio_dev, pin, GPIO_IO_INPUT);
- *    if (err != WM_SUCCESS)
- *       err_handling();
+ *    gpio_drv_setdir(gpio_dev, pin, GPIO_IO_INPUT);
  *
  *    err = gpio_drv_set_cb(gpio_dev, pin, GPIO_INT_FALLING_EDGE,
  *                        gpio_cb);
@@ -123,22 +118,16 @@
 
 #include <mdev.h>
 #include <wmlog.h>
+#include <wmerrno.h>
 #include <lowlevel_drivers.h>
-
-#define GPIO_LOG(...)  wmlog("gpio", ##__VA_ARGS__)
-
-#define WL_CIU_MISC10		((void *)0x800020ac)
-
 
 /** Function pointer for callback function called on GPIO interrupt */
 typedef void (*gpio_irq_cb) (int pin, void *data);
 
-
 /** Initialize the GPIO driver
  *
- *  This function initializes GPIO driver and registers it with mdev interface.
+ *  This function initializes GPIO peripheral clock domain.
  *  @return WM_SUCCESS on success
- *  @return Error code otherwise
  */
 int gpio_drv_init(void);
 
@@ -156,11 +145,13 @@ mdev_t *gpio_drv_open(const char *name);
 
 /** Close the GPIO device
  *
- * This function closes the handle to GPIO device.
+ *  @note Kept for unified mDEV layer interface, nothing to do for GPIO
+ *  driver
  *  @param [in] dev Handle to the GPIO device returned by gpio_drv_open().
- *  @return WM_SUCCESS on Success
  */
-int gpio_drv_close(mdev_t *dev);
+static inline void gpio_drv_close(mdev_t *dev)
+{
+}
 
 /** Set direction of GPIO pin
  *
@@ -168,11 +159,12 @@ int gpio_drv_close(mdev_t *dev);
  *  @param [in] dev Handle to the GPIO device returned by gpio_drv_open().
  *  @param [in] pin Pin Number(GPIO_XX) of GPIO pin (example: GPIO_12)
  *  @param [in] dir Either GPIO_INPUT or GPIO_OUTPUT
- *  @return WM_SUCCESS on Success
- *  @return Error code otherwise
  */
-
-int gpio_drv_setdir(mdev_t *dev, int pin, int dir);
+static inline void gpio_drv_setdir(mdev_t *dev,
+			GPIO_NO_Type pin, GPIO_Dir_Type dir)
+{
+	GPIO_SetPinDir(pin, dir);
+}
 
 /** Set GPIO pin state
  *
@@ -181,10 +173,12 @@ int gpio_drv_setdir(mdev_t *dev, int pin, int dir);
  *  @param [in] pin Pin Number(GPIO_XX) of GPIO pin
  *  @param [in] val Value to be set.
  *         GPIO_IO_LOW(0) or  GPIO_IO_HIGH(1)
- *  @return WM_SUCCESS on success
- *  @return Error code otherwise
  */
-int gpio_drv_write(mdev_t *dev, int pin, int val);
+static inline void gpio_drv_write(mdev_t *dev,
+			GPIO_NO_Type pin, GPIO_IO_Type val)
+{
+	GPIO_WritePinOutput(pin, val);
+}
 
 /** Read GPIO pin status
  *
@@ -196,14 +190,20 @@ int gpio_drv_write(mdev_t *dev, int pin, int val);
  *  @return WM_SUCCESS on success
  *  @return Error code otherwise
  */
-int gpio_drv_read(mdev_t *dev, int pin, int *val);
+static inline int gpio_drv_read(mdev_t *dev, GPIO_NO_Type pin, int *val)
+{
+	if (!val)
+		return -WM_E_INVAL;
+	*val = GPIO_ReadPinLevel(pin);
+	return WM_SUCCESS;
+}
 
 /** Register CallBack for GPIO Pin Interrupt
  *
  *  @param [in] dev Handle to the GPIO device returned by gpio_drv_open().
  *  @param [in] pin Pin Number(GPIO_XX) of GPIO pin
  *  @param [in] type Possible values from GPIO_Int_Type
- *  @param [in] data Pointer to a caller's data structuree
+ *  @param [in] data Pointer to a caller's data structure
  *  @param [in] gpio_cb Function to be called when said interrupt occurs.
  *              If NULL the callback will be de-registered.
  *  @note intCallback_Type is defined as typedef void (intCallback_Type)(void);
@@ -227,7 +227,7 @@ int gpio_drv_set_cb(mdev_t *dev, int pin, GPIO_Int_Type type,
  * \param[in] pin the GPIO pin number
  *
  * \return The domain number for the GPIO (value >= 0)
- * \return -1 if the GPIo is not part of any of the domains.
+ * \return -1 if the GPIO is not part of any of the domains.
  */
 int gpio_drv_get_io_domain(int pin);
 #endif /* _MDEV_GPIO_H_ */

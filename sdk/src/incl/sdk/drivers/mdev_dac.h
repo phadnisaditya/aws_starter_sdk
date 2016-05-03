@@ -22,7 +22,7 @@
  * DAC_WAVE_NORMAL - No predefined waveform<br>
  * DAC_RANGE_LARGE - Output Range Large<br>
  * DAC_OUTPUT_PAD - Output is enable to pad<br>
- * DAC_NON_TIMING_CORRELATED - Non timing corelated mode<br>
+ * DAC_NON_TIMING_CORRELATED - Non timing correlated mode<br>
  *
  * If these defaults need to be changed they should be changed in
  * \ref dac_drv_open
@@ -50,7 +50,7 @@
  * the DAC driver.
  */
 /*
- *  Copyright 2008-2016, Marvell International Ltd.
+ *  Copyright 2008-2015, Marvell International Ltd.
  *  All Rights Reserved.
  */
 
@@ -84,7 +84,7 @@ int dac_drv_init();
  *
  * This function should be used after dac_drv_init() but before dac_drv_open().
  *
- * Only one paramater can be changed in a single call.
+ * Only one parameter can be changed in a single call.
  * Use this function multiple times if multiple parameters need to be changed.
  * All un-modified parameters are set to their default values.
  * The default values are as below:

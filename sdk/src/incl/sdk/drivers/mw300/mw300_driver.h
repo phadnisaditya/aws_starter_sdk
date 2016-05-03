@@ -49,7 +49,7 @@ typedef enum
 typedef enum 
 {
   ERROR = 0, 
-  SUCCESS = !ERROR
+  DSUCCESS = !ERROR
 }Status;
 
 /**

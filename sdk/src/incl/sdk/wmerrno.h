@@ -1,7 +1,7 @@
 /*! \file wmerrno.h
  *  \brief Error Management
  *
- *  Copyright 2008-2016, Marvell International Ltd.
+ *  Copyright 2008-2015, Marvell International Ltd.
  *  All Rights Reserved.
  *
  */
@@ -23,8 +23,58 @@
 
 /* Create Module index */
 #define MOD_GENERIC    0
+/** Unused */
+#define MOD_UNUSED_3   2
+/** HTTPD module index */
+#define MOD_HTTPD      3
+/** Application framework module index */
+#define MOD_AF         4
+/** FTFS module index */
+#define MOD_FTFS       5
+/** RFGET module index */
+#define MOD_RFGET      6
 /** JSON module index  */
 #define MOD_JSON       7
+/** TELNETD module index */
+#define MOD_TELNETD    8
+/** SIMPLE MDNS module index */
+#define MOD_SMDNS      9
+/** EXML module index */
+#define MOD_EXML       10
+/** DHCPD module index */
+#define MOD_DHCPD      11
+/** MDNS module index */
+#define MOD_MDNS       12
+/** SYSINFO module index */
+#define MOD_SYSINFO   13
+/** Unused module index */
+#define MOD_UNUSED_1     14
+/** CRYPTO module index */
+#define MOD_CRYPTO     15
+/** HTTP-CLIENT module index */
+#define MOD_HTTPC      16
+/** PROVISIONING module index */
+#define MOD_PROV       17
+/** SPI module index */
+#define MOD_SPI        18
+/** PSM module index */
+#define MOD_PSM        19
+/** TTCP module index */
+#define MOD_TTCP       20
+/** DIAGNOSTICS module index */
+#define MOD_DIAG       21
+/** Unused module index */
+#define MOD_UNUSED_2    22
+/** WPS module index */
+#define MOD_WPS        23
+/** WLAN module index */
+#define MOD_WLAN        24
+/** USB module index */
+#define MOD_USB        25
+/** WIFI driver module index */
+#define MOD_WIFI        26
+/** Critical error module index */
+#define MOD_CRIT_ERR    27
 /** Last module index .Applications can define their own modules beyond this */
 #define MOD_ERR_LAST	50
 
@@ -34,43 +84,46 @@
 enum wm_errno {
 	/* First Generic Error codes */
 	WM_GEN_E_BASE = MOD_ERROR_START(MOD_GENERIC),
-	WM_FAIL,
-	WM_E_PERM,   /* Operation not permitted */
-	WM_E_NOENT,  /* No such file or directory */
-	WM_E_SRCH,   /* No such process */
-	WM_E_INTR,   /* Interrupted system call */
-	WM_E_IO,     /* I/O error */
-	WM_E_NXIO,   /* No such device or address */
-	WM_E_2BIG,   /* Argument list too long */
-	WM_E_NOEXEC, /* Exec format error */
-	WM_E_BADF,   /* Bad file number */
-	WM_E_CHILD,  /* No child processes */
-	WM_E_AGAIN,  /* Try again */
-	WM_E_NOMEM,  /* Out of memory */
-	WM_E_ACCES,  /* Permission denied */
-	WM_E_FAULT,  /* Bad address */
-	WM_E_NOTBLK, /* Block device required */
-	WM_E_BUSY,   /* Device or resource busy */
-	WM_E_EXIST,  /* File exists */
-	WM_E_XDEV,   /* Cross-device link */
-	WM_E_NODEV,  /* No such device */
-	WM_E_NOTDIR, /* Not a directory */
-	WM_E_ISDIR,  /* Is a directory */
-	WM_E_INVAL,  /* Invalid argument */
-	WM_E_NFILE,  /* File table overflow */
-	WM_E_MFILE,  /* Too many open files */
-	WM_E_NOTTY,  /* Not a typewriter */
-	WM_E_TXTBSY, /* Text file busy */
-	WM_E_FBIG,   /* File too large */
-	WM_E_NOSPC,  /* No space left on device */
-	WM_E_SPIPE,  /* Illegal seek */
-	WM_E_ROFS,   /* Read-only file system */
-	WM_E_MLINK,  /* Too many links */
-	WM_E_PIPE,   /* Broken pipe */
-	WM_E_DOM,    /* Math argument out of domain of func */
-	WM_E_RANGE,  /* Math result not representable */
-	WM_E_CRC,    /* Error in CRC check */
-	WM_E_UNINIT  /* Module is not yet initialized */
+	WM_FAIL,     /* 1 */
+	WM_E_PERM,   /* 2: Operation not permitted */
+	WM_E_NOENT,  /* 3: No such file or directory */
+	WM_E_SRCH,   /* 4: No such process */
+	WM_E_INTR,   /* 5: Interrupted system call */
+	WM_E_IO,     /* 6: I/O error */
+	WM_E_NXIO,   /* 7: No such device or address */
+	WM_E_2BIG,   /* 8: Argument list too long */
+	WM_E_NOEXEC, /* 9: Exec format error */
+	WM_E_BADF,   /* 10: Bad file number */
+	WM_E_CHILD,  /* 11: No child processes */
+	WM_E_AGAIN,  /* 12: Try again */
+	WM_E_NOMEM,  /* 13: Out of memory */
+	WM_E_ACCES,  /* 14: Permission denied */
+	WM_E_FAULT,  /* 15: Bad address */
+	WM_E_NOTBLK, /* 16: Block device required */
+	WM_E_BUSY,   /* 17: Device or resource busy */
+	WM_E_EXIST,  /* 18: File exists */
+	WM_E_XDEV,   /* 19: Cross-device link */
+	WM_E_NODEV,  /* 20: No such device */
+	WM_E_NOTDIR, /* 21: Not a directory */
+	WM_E_ISDIR,  /* 22: Is a directory */
+	WM_E_INVAL,  /* 23: Invalid argument */
+	WM_E_NFILE,  /* 24: File table overflow */
+	WM_E_MFILE,  /* 25: Too many open files */
+	WM_E_NOTTY,  /* 26: Not a typewriter */
+	WM_E_TXTBSY, /* 27: Text file busy */
+	WM_E_FBIG,   /* 28: File too large */
+	WM_E_NOSPC,  /* 29: No space left on device */
+	WM_E_SPIPE,  /* 30: Illegal seek */
+	WM_E_ROFS,   /* 31: Read-only file system */
+	WM_E_MLINK,  /* 32: Too many links */
+	WM_E_PIPE,   /* 33: Broken pipe */
+	WM_E_DOM,    /* 34: Math argument out of domain of func */
+	WM_E_RANGE,  /* 35: Math result not representable */
+
+	/* WMSDK generic error codes */
+	WM_E_CRC,    /* 36: Error in CRC check */
+	WM_E_UNINIT,  /* 37: Module is not yet initialized */
+	WM_E_TIMEOUT, /* 38: Timeout occurred during operation */
 };
 
 #endif /* ! WM_ERRNO_H */

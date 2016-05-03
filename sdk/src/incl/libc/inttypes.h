@@ -8,6 +8,7 @@
 #include <extern.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <compat_compiler.h>
 
 static __inline intmax_t imaxabs(intmax_t __n)
 {

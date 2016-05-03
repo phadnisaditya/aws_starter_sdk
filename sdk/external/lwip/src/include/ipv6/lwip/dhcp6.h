@@ -47,9 +47,10 @@
 
 #if LWIP_IPV6_DHCP6  /* don't build if not configured for use in lwipopts.h */
 
-
 struct dhcp6
 {
+  /*FIXME: Remove this temporary entry*/
+	char a;
   /*TODO: implement DHCP6*/
 };
 

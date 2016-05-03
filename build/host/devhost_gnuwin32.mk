@@ -1,4 +1,4 @@
-# Copyright (C) 2008-2016, Marvell International Ltd.
+# Copyright (C) 2008-2015, Marvell International Ltd.
 # All Rights Reserved.
 
 os_dir := Windows
@@ -14,5 +14,5 @@ mconf_not_on_gnuwin32:
 
 # Function to resolve input path
 define b-abspath
-$(join $(filter %:,$(subst :,: ,$(1))),$(abspath $(filter-out %:,$(subst :,: ,$(1)))))
+$(join $(filter %:,$(subst :,: ,$(1))),$(abspath $(filter-out %:,$(subst :,: ,$(subst \,/,$(1))))))
 endef
